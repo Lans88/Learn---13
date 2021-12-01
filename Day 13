@@ -1,0 +1,389 @@
+// Перечисления (enum)
+//синтаксис пример:
+enum CurrencyUnit {
+    case rouble
+    case euro
+    case dollar, yuan
+}
+
+//Инициализация параметру/переменной одного из членов перечисления
+//вариант 1:
+let russia: CurrencyUnit = .rouble
+
+//вариант 2:
+var europa = CurrencyUnit.euro
+//Изменение значения
+europa = .dollar
+
+//Ассоциированные параметры
+enum AdvancedCurrencyUnit {
+    case euro (countries: [String], shortName: String)
+}
+var euroCurrency: AdvancedCurrencyUnit = .euro(countries: ["France", "German"], shortName: "EUR")
+
+//В качестве параметра можно исп другое перечисление
+enum DollarCountries {
+    case USA
+    case Canada
+    case Australia
+}
+enum AdvancedCurrencyUnit2 {
+    case dollar (nation: DollarCountries, shortName: String)
+}
+var dollar: AdvancedCurrencyUnit2 = .dollar(nation: .USA, shortName: "USD")
+
+//Вложенные перечисления
+enum AdvancedCurrencyUnit3 {
+    enum DollarCountries2 {
+        case USA
+        case Canada
+    }
+    case rouble (countries: [String], shortName: String)
+    case euro (countries: [String], shortName: String)
+    case dollar (nation: DollarCountries2, shortName: String)
+}
+//создадим параметр/переменную вне перечисления
+let canada: AdvancedCurrencyUnit3.DollarCountries2 = .Canada
+
+//связанные значения (синтаксис), значения присвоены сразу:
+//пример 1:
+enum Smile: String {
+    case joy = ":)"
+    case laugh = ":D"
+    case sorrow = ":("
+    case surprise = "o_O"
+}
+//пример 2:
+enum Planet: Int {
+    case mercury = 1, venus, earth, mars, jupiter, saturn, uranus, neprune, pluto = 999
+}
+// доступ к связанным значениям(rawValue):
+let iAmHappy = Smile.joy
+iAmHappy.rawValue
+let planet = Planet.mars
+planet.rawValue
+//инициализаторы, позволяют по значению показать член перечисления
+let myPlanet = Planet.init(rawValue: 3)
+var anotherPlanet = Planet.init(rawValue: 12)
+//Свойства в перечислениях
+enum Smile2: String {
+    case joy = ":)"
+    case laugh = ":D"
+    case sorrow = ":("
+    case surprise = "o_O"
+    //вычисляемое свойство, объявляется только через var
+    var description: String {
+        return self.rawValue
+    }
+}
+let mySmile: Smile2 = .sorrow
+mySmile.description
+//Методы в перенчислениях(функции):
+enum Smile3: String {
+    case joy = ":)"
+    case laugh = ":D"
+    case sorrow = ":("
+    case surprise = "o_O"
+    //вычисляемое свойство, объявляется только через var
+    var description: String {
+        return self.rawValue
+    }
+    func about() {
+        print("перечисление содержит набор смайликов")
+    }
+}
+//вызов функции/метода
+var otherSmile = Smile3.laugh
+otherSmile.about()
+
+//Написать 2 метода: 1й возвращает сам член перечисления, 2й - его связанное значение.
+enum Smile4: String {
+    case joy = ":)"
+    case laugh = ":D"
+    case sorrow = ":("
+    case surprise = "o_O"
+    //вычисляемое свойство, объявляется только через var
+    var description: String { return self.rawValue }
+    func about() {
+        print("перечисление содержит набор смайликов")
+    }
+    //в этом блоке происходит возврат самого члена перечисления, поэтому тип Smile4
+    func descriptionValue() -> Smile4 {
+        return self
+    }
+    //в этом блоке возвращается связанное значение члена перечисления, поэтому тип String
+    func descriptionRawValue() -> String {
+        return rawValue
+    }
+}
+var otherSmile4 = Smile4.joy
+otherSmile4.descriptionValue()
+otherSmile4.descriptionRawValue()
+
+//Рекурсивные перечисления
+    /*можно наделить перечисление функциональностью анализа собственного значения и вычисления на его основе выражений*/
+// пример по простейшим арифметическим одноуровневым операциям
+enum ArithmeticExpression {
+    //операция сложения
+    case addition(Int, Int)
+    //операция вычитания
+    case substraction(Int, Int)
+}
+let expr = ArithmeticExpression.addition(10, 14)
+// в переменной expr хранится член перечисления определяющий операцию сложения
+//создадим метод, который будет возращать результат данных операций
+enum ArithmeticExpression2 {
+    //операция сложения
+    case addition(Int, Int)
+    //операция вычитания
+    case subtraction(Int, Int)
+    //созадем метод, возвращаемое значение Int
+    func evaluate() -> Int {
+        //поиск определенного в данном экземпляер члена перечисления
+        switch self {
+        //объявление переменных значениям и возврат результата операции сложения
+        case .addition(let left, let right):
+            return left + right
+        //объявление переменных значениям и возврат результата операции вычитания
+        case .subtraction(let left, let right):
+            return left - right
+        }
+    }
+}
+var result = ArithmeticExpression2.addition(10, 14)
+result.evaluate()
+
+//доработка нашей программы для вычислений многоуровневых арифметических операций, используется indirect
+//создаем новое перечнисление
+enum ArithmeticExpressionCalc {
+    //указатель на конкретное значение перечисления
+    case number (Int)
+    //указатель на операцию сложения, в качестве типа используются само перечисление
+    indirect case addition ( ArithmeticExpressionCalc, ArithmeticExpressionCalc )
+    //указатель на операцию вычисления, в качестве типа используется само перечисление
+    indirect case subtraction ( ArithmeticExpressionCalc, ArithmeticExpressionCalc )
+    //метод проводящий вычисление
+    func evaluate (_ expression: ArithmeticExpressionCalc? = nil) -> Int {
+        //определение типа операнда (значения или операции)
+        switch expression ?? self {
+        case let .number(value):
+            return value
+        case let .addition (valueLeft, valueRight):
+            return evaluate(valueLeft) + evaluate(valueRight)
+        case .subtraction(let valueLeft, let valueRight):
+        return evaluate(valueLeft) - evaluate(valueRight)
+        }
+    }
+}
+let hardExpr = ArithmeticExpressionCalc.addition(.number(20), .subtraction(.number(10), .number(34)))
+hardExpr.evaluate()
+
+// СТРУКТУРЫ
+//Объявление структуры "игрок в шахматы"
+struct ChessPlayer {}
+//Объявим новый пар-р данного типа
+let playerOleg = ChessPlayer()
+print(type(of: playerOleg))
+//добавим в структуру два св-ва
+struct ChessPlayer2 {
+    let name: String
+    var victories: UInt
+}
+//Встроенный инициализатор, отдельно его объявлять не нужно. Он принимает значения на входе.
+let playerHarry = ChessPlayer2.init(name: "Harry", victories: 32)
+//Более короткая запись
+let playerArtem = ChessPlayer2(name: "Artem", victories: 41)
+//Значения свойств по умолчанию. Для св-в могут быть заданы значения по умолчанию, при этом такие св-ва могут быть опущены при создании нового значения данного типа
+//Пример
+struct PlayerInChess {
+    var name: String
+    var wins: Int = 0
+}
+//при создании нового экземпляра структуры на выбор предоставляется 2 метода
+let playerVilen = PlayerInChess(name: "Vilen")
+var playerJuliya = PlayerInChess(name: "Juliya", wins: 23)
+// Структура как пространство имен, доступ к элементам и самому пространству
+playerVilen.name
+//сначала указываем имя параметра и через точку имя свойства, синтаксис на предыдущей строке
+//Даннный способ обеспечивает изммение значения свойства экземпляра структуры
+playerJuliya.wins += 10
+playerJuliya.wins
+// Методы в структурах, объявляются так же как и в перечислениях
+struct PlayerChess {
+    var name: String = "Player"
+    var wins: UInt = 0
+    init(name: String) {
+        self.name = name
+    }
+    func description() {
+        print ("Игрок \(name) имеет \(wins) побед.")
+    }
+}
+var playerAndrey = PlayerChess(name: "Андрей")
+//вызов метода: сначала имя параметра и через точку имя метода
+playerAndrey.description()
+//Изменяющие методы(mutating)
+struct PlayerChess2 {
+    var name: String = "Player"
+    var wins: UInt = 0
+    init(name: String) {
+        self.name = name
+    }
+    func description() {
+        print ("Игрок \(name) имеет \(wins) побед.")
+    }
+    mutating func addVictories(count: UInt = 1) {
+        wins += count
+    }
+}
+var playerSofa = PlayerChess2(name: "Софа")
+playerSofa.description()
+playerSofa.addVictories()
+playerSofa.description()
+playerSofa.addVictories(count: 9)
+playerSofa.description()
+
+//КЛАССЫ
+// Классы
+// Опищем класс "шахматная фигура"
+//сначала добавим 2 перечисления: цвет и тип фигуры
+enum ChessmanType {
+    case king, castle, bishop, pawn, queen
+}
+enum ColorChessman {
+    case black, white
+}
+//Данные перечисления должны найти свое место в классе в качестве типов данных
+class Chessman {
+    //тип фигуры
+    var typePiece: ChessmanType
+    //цвет
+    var colorPiece: ColorChessman
+    //координаты
+    var coordinate: (String, Int)? = nil
+    //символ соответствующий фигуре
+    let pieceSymbol: Character
+    //инициализируем значения
+    init(typePiece: ChessmanType, colorPiece: ColorChessman, pieceSymbol: Character) {
+        self.typePiece = typePiece
+        self.colorPiece = colorPiece
+        self.pieceSymbol = pieceSymbol
+        //т.к. координата у нас опциональный кортеж, то у нее может и не быть значения, потому что фигура сбита
+    }
+}
+//объявим фигуру
+let kingWhite = Chessman(typePiece: .king, colorPiece: .white, pieceSymbol: "\u{2654}")
+
+//оживим нашу фигуру на поле
+class Chessman2 {
+    //тип фигуры
+    var typePiece: ChessmanType
+    //цвет
+    var colorPiece: ColorChessman
+    //координаты
+    var coordinate: (String, Int)? = nil
+    //символ соответствующий фигуре
+    let pieceSymbol: Character
+    //инициализируем значения
+    init(typePiece: ChessmanType, colorPiece: ColorChessman, pieceSymbol: Character) {
+        self.typePiece = typePiece
+        self.colorPiece = colorPiece
+        self.pieceSymbol = pieceSymbol
+        //т.к. координата у нас опциональный кортеж, то у нее может и не быть значения, потому что фигура сбита
+    }
+    //установка координат
+    func setCoordinate (char c: String, num d: Int) {
+        coordinate = (c, d)
+    }
+    //взятие фигуры
+    func killPiece() {
+        coordinate = nil
+    }
+}
+let kingBlack = Chessman2(typePiece: .king, colorPiece: .black, pieceSymbol: "\u{2654}")
+//установка черного короля на доску
+kingBlack.setCoordinate(char: "E", num: 1)
+//Инициальзаторы классов
+//Существующий код выше не позволяет одним выражением выставить фигуру на доску. Для этого нужно создать еще один инициализатор
+//оживим нашу фигуру на поле
+class Chessman3 {
+    //тип фигуры
+    var typePiece: ChessmanType
+    //цвет
+    var colorPiece: ColorChessman
+    //координаты
+    var coordinate: (String, Int)? = nil
+    //символ соответствующий фигуре
+    let pieceSymbol: Character
+    //инициализируем значения
+    init(typePiece: ChessmanType, colorPiece: ColorChessman, pieceSymbol: Character) {
+        self.typePiece = typePiece
+        self.colorPiece = colorPiece
+        self.pieceSymbol = pieceSymbol
+        //т.к. координата у нас опциональный кортеж, то у нее может и не быть значения, потому что фигура сбита
+    }
+    init(typePiece: ChessmanType, colorPiece: ColorChessman, pieceSymbol: Character, coordinate: (String, Int)) {
+        self.typePiece = typePiece
+        self.colorPiece = colorPiece
+        self.pieceSymbol = pieceSymbol
+        setCoordinate(char: coordinate.0, num: coordinate.1)
+    }
+    //установка координат
+    func setCoordinate (char c: String, num d: Int) {
+        coordinate = (c, d)
+    }
+    //взятие фигуры
+    func killPiece() {
+        coordinate = nil
+    }
+}
+//При объявлении нового экземпляра класса на выбор пользователю предлагается 2 метода
+var whiteQueen = Chessman3(typePiece: .queen, colorPiece: .white, pieceSymbol: "\u{2655}", coordinate: ("A", 6))
+
+//Вложенные в классы типы
+//Описанные выше отдельно от класса перечисления можнро вложить внутрь класса и они будут доступны только для указанного класса
+class Chessman4 {
+    enum ChessmanType2 {
+        case king, castle, bishop, pawn, queen
+    }
+    enum ColorChessman2 {
+        case black, white
+    }
+    //тип фигуры
+    var typePiece: ChessmanType2
+    //цвет
+    var colorPiece: ColorChessman2
+    //координаты
+    var coordinate: (String, Int)? = nil
+    //символ соответствующий фигуре
+    let pieceSymbol: Character
+    //инициализируем значения
+    init(typePiece: ChessmanType2, colorPiece: ColorChessman2, pieceSymbol: Character) {
+        self.typePiece = typePiece
+        self.colorPiece = colorPiece
+        self.pieceSymbol = pieceSymbol
+        //т.к. координата у нас опциональный кортеж, то у нее может и не быть значения, потому что фигура сбита
+    }
+    init(typePiece: ChessmanType2, colorPiece: ColorChessman2, pieceSymbol: Character, coordinate: (String, Int)) {
+        self.typePiece = typePiece
+        self.colorPiece = colorPiece
+        self.pieceSymbol = pieceSymbol
+        setCoordinate(char: coordinate.0, num: coordinate.1)
+    }
+    //установка координат
+    func setCoordinate (char c: String, num d: Int) {
+        coordinate = (c, d)
+    }
+    //взятие фигуры
+    func killPiece() {
+        coordinate = nil
+    }
+}
+//При объявлении нового экземпляра класса на выбор пользователю предлагается 2 метода
+var blackQueen = Chessman4(typePiece: .queen, colorPiece: .black, pieceSymbol: "\u{2655}", coordinate: ("A", 7))
+
+//ссылки на вложенные типы
+/*Для доступа к элементам или типам в ограниченной области видимости из вне необходимо указать ссылку на данных тип. 
+Для этого необходимо указать имя родительского типа, после которого следует имя требуемого типа данных.*/
+let linkToEnumValue = Chessman4.ChessmanType2.bishop
+print(linkToEnumValue)
